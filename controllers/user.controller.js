@@ -1,7 +1,10 @@
 const User = require("../models/user.model");
+const Token = require("../models/token.model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const {generateAccessToken, generateRefreshToken} = require("../utils/generateToken")
+
+
 
 const generationToken = (id, email) => { return jwt.sign(
     {id, email},
@@ -59,6 +62,11 @@ exports.login = async(req, res)=>{
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
 
+         await Token.create({
+          userId: user._id,
+          token: refreshToken
+});
+
         res.status(200).send({isSuccess: true, message: "Login Successfully!", accessToken, refreshToken})
 
     } catch (error) {
@@ -88,5 +96,24 @@ exports.refreshToken = (req, res)=>{
     }
 }
 
+exports.logout = async (req,res)=>{
+   try{
 
+      const {refreshToken} = req.body;
+
+      await Token.findOneAndDelete({
+         token: refreshToken
+      });
+
+      
+      res.json({
+         message:"Logout successful"
+      });
+
+   }catch(error){
+      res.status(500).json({
+         message:"Logout failed"
+      });
+   }
+}
     
